@@ -1,4 +1,5 @@
-// src/app/core/guards/auth.guard.ts
+// src/app/core/guards/permission.guard.ts
+
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
 import { AuthService } from '../interceptors/auth.service';
@@ -10,16 +11,16 @@ export class PermissionGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const expectedRoles: string[] = route.data['roles'] || [];
-    const userRoles = this.authService.getUserRoles(); // <-- aqui
+    const expectedRoles = route.data['roles'] as string[] || [];
+    const userRoles = this.authService.getUserRoles(); // <- corrigido
 
-    // Usuário não autenticado
+    // Se não estiver autenticado
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/acesso-negado']);
       return false;
     }
 
-    // Nenhuma role do usuário bate com a esperada
+    // Verifica se o usuário possui pelo menos uma role esperada
     const hasRole = userRoles.some(role => expectedRoles.includes(role));
     if (!hasRole) {
       this.router.navigate(['/acesso-negado']);

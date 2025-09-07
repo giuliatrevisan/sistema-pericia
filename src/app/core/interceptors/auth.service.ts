@@ -1,10 +1,13 @@
+// src/app/core/interceptors/auth.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { catchError, map, Observable, tap, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environments';
 
 interface LoginResponse {
-  access_token: string;
+  access_token: string; // JWT
   user: {
     id: number;
     username: string;
@@ -19,38 +22,67 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  private readonly TOKEN_KEY = 'access_token';
   private readonly USER_KEY = 'user';
 
+  private permissionsMap: Record<string, string[]> = {
+    admin: ['CREATE_USER', 'EDIT_USER', 'DELETE_USER', 'VIEW_REPORTS'],
+    analyst: ['VIEW_REPORTS', 'FILTER_DATA'],
+    tech: ['UPDATE_STATUS', 'VIEW_REPORTS'],
+  };
+
+  /** Login */
   login(username: string, password: string): Observable<void> {
-    return this.http.post<LoginResponse>('http://localhost:5000/api/auth/login', { username, password })
-      .pipe(
-        tap(res => {
-          localStorage.setItem(this.TOKEN_KEY, res.access_token);
-          localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
-        }),
-        map(() => {}),
-        catchError(this.handleError)
-      );
+    const url = `${environment.apiUrl}/auth/login`; // usa a URL do environment
+    return this.http.post<LoginResponse>(url, { username, password }).pipe(
+      tap(res => {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
+        localStorage.setItem('token', res.access_token); // armazenando JWT
+      }),
+      map(() => { }),
+      catchError(this.handleError)
+    );
   }
 
-  logout() {
-    localStorage.removeItem(this.TOKEN_KEY);
+  register(username: string, email: string, password: string) {
+    const url = `${environment.apiUrl}/auth/register`;
+    return this.http.post<{ message: string; user: any }>(url, { username, email, password }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Logout */
+  logout(): void {
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
+  /** Obter usuário */
   getUser() {
     const user = localStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
   }
 
-  private handleError(error: HttpErrorResponse) {
-    if (error.status === 0) return throwError(() => new Error('Não foi possível conectar ao servidor.'));
+  /** Roles e permissões */
+  getUserRoles(): string[] {
+    return this.getUser()?.roles ?? [];
+  }
+
+  getUserPermissions(): string[] {
+    return this.getUserRoles().flatMap(role => this.permissionsMap[role] || []);
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.getUserPermissions().includes(permission);
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getUser();
+  }
+
+  private handleError(error: any) {
+    if (error.status === 0)
+      return throwError(() => new Error('Não foi possível conectar ao servidor.'));
     if (error.status === 401) return throwError(() => new Error('Credenciais inválidas.'));
     return throwError(() => new Error('Erro no servidor. Tente novamente mais tarde.'));
   }

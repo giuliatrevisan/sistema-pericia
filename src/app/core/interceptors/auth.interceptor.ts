@@ -1,23 +1,28 @@
-// src/app/core/interceptors/auth.interceptor.ts
-import type { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+// scr/app/core/interceptors/auth.interceptors.ts
+import { Injectable } from '@angular/core';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
 
-export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService, private router: Router) {}
 
-  const token = auth.getToken();
-  const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
-
-  return next(authReq).pipe(
-    catchError((error) => {
-      if (error.status === 401) {
-        auth.logout(); // limpa token e redireciona
-      }
-      return throwError(() => error);
-    })
-  );
-};
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Não adicionamos token manualmente, usamos cookie HttpOnly enviado pelo navegador
+    return next.handle(req).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authService.logout();
+        } else if (error.status === 403) {
+          this.router.navigate(['/acesso-negado']);
+        } else if (error.status >= 500) {
+          console.error('Erro de servidor:', error.message);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+}

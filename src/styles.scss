@@ -1,1 +1,22 @@
 /* You can add global styles to this file, and also import other style files */
+/* styles.scss */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Variáveis globais */
+$primary-color: #0f4c75;
+$accent-color: #00b894;
+$error-color: #e74c3c;
+$bg-light: #f5f6fa;

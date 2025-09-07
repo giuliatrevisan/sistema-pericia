@@ -1,16 +1,32 @@
-<div class="login-container">
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <h2>Login</h2>
+<div class="login-wrapper">
+  <form [formGroup]="form" (ngSubmit)="submit($event)" class="login-form">
+    <div class="form-header">
+      <div class="form-logo">
+        <img src="assets/images/logos/logo-horizontal.png" alt="Logo Perícia Forense" />
+      </div>
+      <h2>Login</h2>
+    </div>
 
-    <input formControlName="username" type="text" placeholder="Usuário" />
-    <input formControlName="password" type="password" placeholder="Senha" />
+    <div class="input-group">
+      <label for="username">Usuário</label>
+      <input id="username" formControlName="username" type="text" placeholder="Digite seu usuário" />
+    </div>
 
-    <button type="submit" [disabled]="loading()">Entrar</button>
+    <div class="input-group">
+      <label for="password">Senha</label>
+      <input id="password" formControlName="password" type="password" placeholder="Digite sua senha" />
+    </div>
 
-    <ng-container *ngIf="error() as err">
-      <div class="error">{{ err }}</div>
-    </ng-container>
-    
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Entrando...' : 'Entrar' }}
+    </button>
+
+    <div *ngIf="error()" class="error">{{ error() }}</div>
+
+    <div class="links">
+      <a href="#">Esqueci minha senha</a>
+      <a [routerLink]="'/register'">Cadastre-se</a>
+    </div>
     
   </form>
 </div>
