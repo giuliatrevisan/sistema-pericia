@@ -102,11 +102,3 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 
 /* Garante que o overlay do Angular Material fique acima de sidebar/navbar */
-.cdk-overlay-container {
-  z-index: 2000 !important;
-}
-
-/* Ajusta o dialog se necessário */
-.mat-dialog-container {
-  z-index: 2001 !important;
-}
