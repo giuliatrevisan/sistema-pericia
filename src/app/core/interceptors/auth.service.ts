@@ -25,9 +25,26 @@ export class AuthService {
   private readonly USER_KEY = 'user';
 
   private permissionsMap: Record<string, string[]> = {
-    admin: ['CREATE_USER', 'EDIT_USER', 'DELETE_USER', 'VIEW_REPORTS'],
-    analyst: ['VIEW_REPORTS', 'FILTER_DATA'],
-    tech: ['UPDATE_STATUS', 'VIEW_REPORTS'],
+    admin: [
+      'read_solicitacoes',
+      'create_solicitacoes',
+      'update_solicitacoes',
+      'delete_solicitacoes',
+      'view_dashboard',
+      'manage_users',
+      'manage_roles',
+    ],
+    perito: [
+      'read_solicitacoes',
+      'create_solicitacoes',
+      'update_solicitacoes',
+      'delete_solicitacoes',
+      'view_dashboard',
+    ],
+    user: [
+      'read_solicitacoes',
+      'create_solicitacoes',
+    ],
   };
 
   /** Login */
@@ -81,9 +98,20 @@ export class AuthService {
   }
 
   private handleError(error: any) {
-    if (error.status === 0)
+    if (error.error && error.error.error) {
+      // servidor retornou JSON no formato { error: "mensagem" }
+      return throwError(() => new Error(error.error.error));
+    }
+  
+    if (error.status === 0) {
       return throwError(() => new Error('Não foi possível conectar ao servidor.'));
-    if (error.status === 401) return throwError(() => new Error('Credenciais inválidas.'));
+    }
+  
+    if (error.status === 401) {
+      return throwError(() => new Error('Credenciais inválidas.'));
+    }
+  
     return throwError(() => new Error('Erro no servidor. Tente novamente mais tarde.'));
   }
+  
 }
