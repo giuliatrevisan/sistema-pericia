@@ -14,7 +14,7 @@ export const routes: Routes = [
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [PermissionGuard],
-    data: { roles: ['admin'], permissions: ['view_dashboard'] },
+    data: { roles: ['user','admin','perito'], permissions: ['view_dashboard'] },
   },
   { path: 'acesso-negado', component: AccessDeniedComponent },
   { path: 'erro-servidor', component: ServerErrorComponent },

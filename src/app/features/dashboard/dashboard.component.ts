@@ -1,46 +1,75 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/interceptors/auth.service';
-import { finalize } from 'rxjs';
+import { SidebarComponent } from '../../core/sidebar/sidebar.component';
+import { NavbarComponent } from '../../core/navbar/navbar.component';
+import { SolicitacoesTableComponent } from './solicitacoes-table.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SidebarComponent, NavbarComponent, SolicitacoesTableComponent],
   template: `
-    <div class="dashboard-container">
-      <h1>Você está logado!</h1>
-      <button (click)="logout()" [disabled]="loading()">Logout</button>
+    <div class="dashboard-layout">
+      <app-sidebar></app-sidebar>
+
+      <div class="main-content">
+        <app-navbar></app-navbar>
+
+        <div class="content">
+          <app-solicitacoes-table></app-solicitacoes-table>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
-    .dashboard-container {
+    .dashboard-layout {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color, #f5f5f5);
+    }
+
+    .main-content {
+      margin-left: 250px; /* largura da sidebar */
+      width: calc(100% - 250px);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      color: var(--text-color, #333);
     }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
+
+    .content {
+      margin-top: 60px; /* altura da navbar */
+      padding: 1rem;
+      flex: 1;
+      overflow-y: auto;
+      color: var(--text-color, #333);
+    }
+
+    /* Responsividade para dispositivos menores */
+    @media (max-width: 767.98px) {
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+
+    /* Opcional: estilo para a tabela dentro do dashboard */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .content th, .content td {
+      padding: 0.5rem;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    .content th {
+      background-color: #f0f0f0;
     }
   `]
 })
-export class DashboardComponent {
-  loading = signal(false);
-
-  constructor(private auth: AuthService, private router: Router) {}
-
-  logout() {
-    this.loading.set(true);
-    // opcional: delay simulado
-    setTimeout(() => {
-      this.auth.logout();
-      this.loading.set(false);
-    }, 200);
-  }
-}
+export class DashboardComponent {}
