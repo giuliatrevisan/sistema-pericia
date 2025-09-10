@@ -1,8 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { SidebarComponent } from '../../core/sidebar/sidebar.component';
-import { NavbarComponent } from '../../core/navbar/navbar.component';
+import { SidebarComponent } from '../../core/components/sidebar/sidebar.component';
+import { NavbarComponent } from '../../core/components/navbar/navbar.component';
 import { SolicitacoesTableComponent } from './components/table/solicitacoes-table.component';
 import { DashboardStatsComponent } from './components/stats/dashboard-stats.component';
 import { SkeletonCardComponent } from './components/stats/components/skeleton/skeleton-card.component';

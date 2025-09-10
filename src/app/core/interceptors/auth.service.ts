@@ -21,8 +21,9 @@ interface LoginResponse {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-
+  private logoutTimeoutId: any = null; // ID do setTimeout
   private readonly USER_KEY = 'user';
+  private readonly LOGOUT_KEY = 'logout-timestamp'; // timestamp do logout automático
 
   private permissionsMap: Record<string, string[]> = {
     admin: [
@@ -47,19 +48,59 @@ export class AuthService {
     ],
   };
 
+  constructor() {
+    this.initAutoLogout();
+  }
+
+  /** Inicializa o temporizador de logout ao carregar o serviço */
+  private initAutoLogout() {
+    const timestamp = localStorage.getItem(this.LOGOUT_KEY);
+    if (timestamp) {
+      const msLeft = +timestamp - Date.now();
+      if (msLeft <= 0) {
+        this.logout();
+      } else {
+        this.setLogoutTimer(msLeft);
+      }
+    }
+  }
+
+  /** Seta o logout automático */
+  private setLogoutTimer(ms: number) {
+    if (this.logoutTimeoutId) clearTimeout(this.logoutTimeoutId);
+    this.logoutTimeoutId = setTimeout(() => {
+      this.logout();
+      alert('Sessão expirada por questão de segurança.');
+    }, ms);
+  }
+
+  /** Renova a sessão (chamar ao interagir com o sistema) */
+  refreshSession() {
+    if (!this.isAuthenticated()) return;
+    const logoutTimestamp = Date.now() + 30 * 60 * 1000; // 30 minutos
+    localStorage.setItem(this.LOGOUT_KEY, logoutTimestamp.toString());
+    this.setLogoutTimer(30 * 60 * 1000);
+  }
+
   /** Login */
   login(username: string, password: string): Observable<void> {
-    const url = `${environment.apiUrl}/auth/login`; // usa a URL do environment
+    const url = `${environment.apiUrl}/auth/login`;
     return this.http.post<LoginResponse>(url, { username, password }).pipe(
       tap(res => {
         localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
-        localStorage.setItem('token', res.access_token); // armazenando JWT
+        localStorage.setItem('token', res.access_token);
+
+        // Seta logout automático 30 minutos após o login
+        const logoutTimestamp = Date.now() + 30 * 60 * 1000;
+        localStorage.setItem(this.LOGOUT_KEY, logoutTimestamp.toString());
+        this.setLogoutTimer(30 * 60 * 1000);
       }),
-      map(() => { }),
+      map(() => {}),
       catchError(this.handleError)
     );
   }
 
+  /** Registro */
   register(username: string, email: string, password: string) {
     const url = `${environment.apiUrl}/auth/register`;
     return this.http.post<{ message: string; user: any }>(url, { username, email, password }).pipe(
@@ -71,6 +112,8 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem('token');
+    localStorage.removeItem(this.LOGOUT_KEY);
+    if (this.logoutTimeoutId) clearTimeout(this.logoutTimeoutId);
     this.router.navigate(['/login']);
   }
 
@@ -97,9 +140,9 @@ export class AuthService {
     return !!this.getUser();
   }
 
+  /** Manipulação de erros */
   private handleError(error: any) {
     if (error.error && error.error.error) {
-      // servidor retornou JSON no formato { error: "mensagem" }
       return throwError(() => new Error(error.error.error));
     }
   
@@ -113,5 +156,4 @@ export class AuthService {
   
     return throwError(() => new Error('Erro no servidor. Tente novamente mais tarde.'));
   }
-  
 }

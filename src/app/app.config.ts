@@ -5,6 +5,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { HttpClientModule } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { environment } from './environments/environments';
+import { provideAnimations } from '@angular/platform-browser/animations'; // ✅ animações
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,17 +14,16 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
 
-    // adiciona o HttpClientModule aqui
+    // HttpClient
     importProvidersFrom(HttpClientModule),
 
-    // ✅ habilita o service worker somente em produção
+    // ✅ animações
+    provideAnimations(),
+
+    // Service Worker
     provideServiceWorker('ngsw-worker.js', {
-      enabled: environment.production,
-      registrationStrategy: 'registerWhenStable:30000', 
-      // só registra depois de 30s ou quando o app ficar estável
-    }), provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }),
+      enabled: environment.production && !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ]
 };

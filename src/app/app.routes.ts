@@ -1,11 +1,13 @@
-//app.routes.ts
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { UsersComponent } from './features/users/user.component';
 import { PermissionGuard } from './core/guards/permission.guard';
 import { AccessDeniedComponent } from './features/errors/access-denied/access-denied.component';
 import { ServerErrorComponent } from './features/errors/server-error/server-error.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { ProfileComponent } from './features/profile/profile.component';
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
@@ -16,6 +18,20 @@ export const routes: Routes = [
     canActivate: [PermissionGuard],
     data: { roles: ['user','admin','perito'], permissions: ['view_dashboard'] },
   },
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [PermissionGuard],
+    data: { roles: ['user','admin','perito'], permissions: ['view_dashboard'] },
+  },
+
+  {
+    path: 'user', // rota protegida
+    component: UsersComponent,
+    canActivate: [PermissionGuard],
+    data: { roles: ['admin'] }, // somente admin pode acessar
+  },
+
   { path: 'acesso-negado', component: AccessDeniedComponent },
   { path: 'erro-servidor', component: ServerErrorComponent },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -27,4 +43,3 @@ export const routes: Routes = [
     component: DashboardComponent, // o guard vai redirecionar se não estiver logado
   },
 ];
-
