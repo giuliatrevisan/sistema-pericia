@@ -7,6 +7,7 @@ import { AccessDeniedComponent } from './features/errors/access-denied/access-de
 import { ServerErrorComponent } from './features/errors/server-error/server-error.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import {  RelatoriosComponent } from './features/charts/chart.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -17,6 +18,12 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [PermissionGuard],
     data: { roles: ['user','admin','perito'], permissions: ['view_dashboard'] },
+  },
+  {
+    path: 'relatorios',
+    component: RelatoriosComponent,
+    canActivate: [PermissionGuard],
+    data: { roles: ['admin','perito'], permissions: ['view_dashboard'] },
   },
   {
     path: 'profile',
