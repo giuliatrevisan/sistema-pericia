@@ -49,7 +49,6 @@ import { SkeletonCardComponent } from './components/stats/components/skeleton/sk
       height: 100vh;
       width: 100%;
       font-family: 'Inter', sans-serif;
-      background-color: #f5f5f5;
     }
 
     .main-content {

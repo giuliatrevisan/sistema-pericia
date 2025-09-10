@@ -1,9 +1,6 @@
+/* styles.scss */
 
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+/* Importando o tema do Angular Material */
 @use '@angular/material' as mat;
 
 html {
@@ -17,29 +14,22 @@ html {
   ));
 }
 
+/* Definindo o esquema de cores e fontes globais */
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
   color-scheme: light;
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
 
-  // Reset the user agent margin.
+  /* Resetando a margem do usuário */
   margin: 0;
 }
-/* You can add global styles to this file, and also import other style files */
-/* styles.scss */
 
-/* styles.scss */
-
+/* Importando a fonte do Google */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
+/* Definindo estilos globais e variáveis de tema */
 html, body {
   margin: 0;
   padding: 0;
@@ -52,32 +42,37 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Variáveis globais */
+/* Variáveis globais para temas */
+
 :root {
-  /* Light mode */
-  --primary-color: white;       /* Navbar */
-  --sidebar-color: #5A9BD5;       /* Sidebar */
-  --bg-color: #f0f0f0;            /* Background branco */
-  --text-color: #2222;             /* Texto escuro */
-  --dialog-bg:white;
+  --primary-color: white;
+  --sidebar-color: #5A9BD5;
+  --bg-color: #f4f5f7;
+  --text-color: #222222;
+  --background-image-light: url('/assets/images/backgrounds/bg-light.jpg');
+  --background-image-dark: url('/assets/images/backgrounds/bg-dark.jpg');
+}
+
+body {
+  background-color: var(--bg-color);
+  background-image: var(--background-image-light);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease, background-image 0.3s ease;
 }
 
 body.dark-mode {
-  /* Dark mode */
-  --primary-color:#313866 ;       /* Navbar */
-  --sidebar-color: #222324;       /* Sidebar */
-  --bg-color: #313866;            /* Background cinza escuro intermediário */
-  --text-color: white;           /* Texto branco */
-  --dialog-bg: #d3d3d3;
+  --primary-color: #313866;
+  --sidebar-color: #222324;
+  --bg-color: #313866;
+  --text-color: white;
+  background-image: var(--background-image-dark);
 }
 
-/* Aplica variáveis aos elementos principais */
-body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: 'Inter', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+
 
 .navbar {
   background-color: var(--primary-color) !important;
@@ -92,14 +87,12 @@ body {
 }
 
 .main-content, .content {
-  background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
 
 /* Garante que o overlay do Angular Material fique acima de sidebar/navbar */
 .cdk-overlay-container {

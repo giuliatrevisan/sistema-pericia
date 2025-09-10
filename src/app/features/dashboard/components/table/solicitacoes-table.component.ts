@@ -165,14 +165,17 @@ export class SolicitacoesTableComponent implements OnInit {
 
     this.http.get<any>(`${environment.apiUrl}/solicitacoes`, { headers, params }).subscribe(
       res => {
-        this.dataSource.data = res.solicitacoes || [];
-        this.totalItems = res.pagination?.total || 0;
-        this.currentPage = res.pagination?.page || 1;
-        this.cdr.detectChanges();
-        this.updateFilter();
+        setTimeout(() => {
+          this.dataSource.data = res.solicitacoes || [];
+          this.totalItems = res.pagination?.total || 0;
+          this.currentPage = res.pagination?.page || 1;
+          this.updateFilter();
+          this.cdr.detectChanges();
+        });
       },
       err => console.error('Erro ao carregar solicitações', err)
     );
+    
   }
 
   onPageChange(page: number) { this.carregarSolicitacoes(page); }
