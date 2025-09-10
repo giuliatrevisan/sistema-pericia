@@ -25,7 +25,6 @@ interface User {
     RouterModule,
     MatIconModule,
     MatTooltipModule,
-    LogoutDialogComponent
   ],
   template: `
     <div 
