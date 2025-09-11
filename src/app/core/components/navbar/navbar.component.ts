@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy,ChangeDetectorRef, NgZone } from '@angular/core';
 import { sidebarMobileOpen } from '../sidebar/sidebar.store';
 import { Router } from '@angular/router';
 import { AuthService } from '../../interceptors/auth.service';
@@ -89,8 +89,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private auth: AuthService,
-    public theme: ThemeService
+  private auth: AuthService,
+  public theme: ThemeService,
+  private cd: ChangeDetectorRef,
+  private ngZone: NgZone
   ) { }
 
   ngOnInit() {
@@ -114,15 +116,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.seconds = 0;
       return;
     }
-
+  
     const diff = +logoutTimestamp - Date.now();
     this.timeLeft = diff > 0 ? diff : 0;
-    this.minutes = Math.floor(this.timeLeft / 1000 / 60);
-    this.seconds = Math.floor((this.timeLeft / 1000) % 60);
-
-    if (this.timeLeft === 0 && this.auth.isAuthenticated()) {
-      this.auth.logout();
-      alert('Sua sessão expirou!');
-    }
+  
+    this.ngZone.run(() => {
+      this.minutes = Math.floor(this.timeLeft / 1000 / 60);
+      this.seconds = Math.floor((this.timeLeft / 1000) % 60);
+  
+      if (this.timeLeft === 0 && this.auth.isAuthenticated()) {
+        this.auth.logout();
+        alert('Sua sessão expirou!');
+      }
+  
+      this.cd.markForCheck(); // garante atualização da view
+    });
   }
 }

@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { environment } from '../../../../../environments/environments';
 import { AuthService } from '../../../../../core/interceptors/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-solicitacao-edit-dialog',
@@ -18,10 +19,6 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
   </div>
 
   <form [formGroup]="form" (ngSubmit)="salvar()" class="dialog-form">
-
-    <div *ngIf="errorMsg" class="error-message">
-      <p>{{ errorMsg }}</p>
-    </div>
 
     <div class="form-row">
       <div class="form-item">
@@ -176,13 +173,14 @@ button[type="button"] { background-color: #f44336; color: white; }
 })
 export class SolicitacaoEditDialogComponent {
   form: any;
-  errorMsg: string | null = null;
+  errorMsg: string = '';
   submitted = false;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private auth: AuthService,
+    private snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<SolicitacaoEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -196,26 +194,41 @@ export class SolicitacaoEditDialogComponent {
       observacoes: [data?.observacoes || '']
     });
   }
-
   salvar() {
     this.submitted = true;
     if (this.form.invalid) return;
-    this.errorMsg = null;
-
+    this.errorMsg = 'Solicitação editada com sucesso!';
+  
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     const payload = { ...this.form.value };
-
+  
     this.http.put(`${environment.apiUrl}/solicitacoes/${this.data.id}`, payload, { headers })
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.snackBar.open('Solicitação atualizada com sucesso!', 'Fechar', {
+            duration: 4000,
+            panelClass: ['snack-success']
+          });
+          this.dialogRef.close(true);
+        },
         error: (err: HttpErrorResponse) => {
-          if (err.status === 401) this.auth.logout();
-          else this.errorMsg = err.error?.error || 'Ocorreu um erro ao atualizar a solicitação.';
+          if (err.status === 401) {
+            this.auth.logout();
+            this.snackBar.open('Sessão expirada. Faça login novamente.', 'Fechar', {
+              duration: 4000,
+              panelClass: ['snack-warning']
+            });
+          } else {
+            this.errorMsg = err.error?.error || 'Ocorreu um erro ao atualizar a solicitação.';
+            this.snackBar.open(this.errorMsg, 'Fechar', {
+              duration: 4000,
+              panelClass: ['snack-error']
+            });
+          }
         }
       });
   }
-
   fechar(success: boolean = false) {
     this.dialogRef.close(success);
   }

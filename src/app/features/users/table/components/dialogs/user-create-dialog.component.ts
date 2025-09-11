@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { environment } from '../../../../../environments/environments';
 import { AuthService } from '../../../../../core/interceptors/auth.service';
+import { ThemeService } from '../../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-user-add-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule],
   template: `
 <div class="dialog-container">
   <div class="dialog-header">
@@ -19,9 +21,6 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
 
   <form [formGroup]="form" (ngSubmit)="salvar()" class="dialog-form">
 
-    <div *ngIf="errorMsg" class="error-message">
-      <p>{{ errorMsg }}</p>
-    </div>
 
     <div class="form-row">
       <div class="form-item">
@@ -36,7 +35,7 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
         <label>Email</label>
         <input type="email" formControlName="email" placeholder="Email">
         <div class="field-error" *ngIf="form.get('email')?.invalid && (form.get('email')?.touched || submitted)">
-          Email é obrigatório
+          Email é obrigatório e deve ser válido
         </div>
       </div>
     </div>
@@ -71,47 +70,51 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
   </form>
 </div>
   `,
-  styles: [`
-.dialog-container {
-  padding: 32px;
-  max-width: 450px;
-  width: 100%;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-.dialog-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.logo { max-width: 180px; margin-bottom: 12px; }
-h2 { margin: 0; text-align: center; color: #333; font-weight: 600; }
-.dialog-form { display: flex; flex-direction: column; gap: 16px; }
-.form-row { display: flex; gap: 4%; flex-wrap: wrap; }
-.form-item { flex: 1 1 48%; display: flex; flex-direction: column; gap: 4px; }
-label { font-weight: 500; color: #333; }
-input, select { width: 100%; height: 32px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; transition: border-color 0.3s, box-shadow 0.3s; }
-input:focus, select:focus { border-color: #007bff; box-shadow: 0 0 3px rgba(0,123,255,0.5); outline: none; }
-.field-error { color: #f44336; font-size: 12px; margin-top: 2px; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; }
-button { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; }
-button[type="submit"] { background-color: #007bff; color: white; }
-button[type="button"] { background-color: #f44336; color: white; }
-.error-message p { color: #f44336; font-weight: 500; margin: 0 0 12px 0; }
-@media (max-width: 768px) { .form-item { flex: 1 1 100%; } }
-  `]
+
+      styles: [`
+    .dialog-container {
+      padding: 32px;
+      max-width: 450px;
+      width: 100%;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    .dialog-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .logo { max-width: 180px; margin-bottom: 12px; }
+    h2 { margin: 0; text-align: center; color: #333; font-weight: 600; }
+    .dialog-form { display: flex; flex-direction: column; gap: 16px; }
+    .form-row { display: flex; gap: 4%; flex-wrap: wrap; }
+    .form-item { flex: 1 1 48%; display: flex; flex-direction: column; gap: 4px; }
+    label { font-weight: 500; color: #333; }
+    input, select { width: 100%; height: 32px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; transition: border-color 0.3s, box-shadow 0.3s; }
+    input:focus, select:focus { border-color: #007bff; box-shadow: 0 0 3px rgba(0,123,255,0.5); outline: none; }
+    .field-error { color: #f44336; font-size: 12px; margin-top: 2px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; }
+    button { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; }
+    button[type="submit"] { background-color: #007bff; color: white; }
+    button[type="button"] { background-color: #f44336; color: white; }
+    .error-message p { color: #f44336; font-weight: 500; margin: 0 0 12px 0; }
+    @media (max-width: 768px) { .form-item { flex: 1 1 100%; } }
+      `]
 })
 export class UserAddDialogComponent {
   form: any;
-  errorMsg: string | null = null;
+  errorMsg: string = '';
   submitted = false;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private auth: AuthService,
-    private dialogRef: MatDialogRef<UserAddDialogComponent>
+    private dialogRef: MatDialogRef<UserAddDialogComponent>,
+    private snackBar: MatSnackBar,
+    public theme: ThemeService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.form = this.fb.group({
       username: ['', Validators.required],
@@ -124,20 +127,33 @@ export class UserAddDialogComponent {
   salvar() {
     this.submitted = true;
     if (this.form.invalid) return;
-    this.errorMsg = null;
+    this.errorMsg = 'Usuário criado com sucesso';
 
-    const payload = {
-      username: this.form.value.username,
-      email: this.form.value.email,
-      password: this.form.value.password,
-      role: this.form.value.role
-    };
+    const payload = this.form.value;
 
     this.http.post(`${environment.apiUrl}/auth/register`, payload)
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          if (isPlatformBrowser(this.platformId)) {
+            this.snackBar.open(this.errorMsg || 'Ocorreu um erro', 'Fechar', {
+              duration: 4000,
+              horizontalPosition: 'right',
+              verticalPosition: 'top',
+              panelClass: this.theme.isDarkMode() ? 'toast-dark' : 'toast-light'
+            });
+          }
+          this.dialogRef.close(true);
+        },
         error: (err: HttpErrorResponse) => {
           this.errorMsg = err.error?.error || 'Ocorreu um erro ao adicionar o usuário.';
+          if (isPlatformBrowser(this.platformId)) {
+            this.snackBar.open(this.errorMsg, 'Fechar', {
+              duration: 4000,
+              horizontalPosition: 'right',
+              verticalPosition: 'top',
+              panelClass: this.theme.isDarkMode() ? 'toast-dark' : 'toast-light'
+            });
+          }
         }
       });
   }

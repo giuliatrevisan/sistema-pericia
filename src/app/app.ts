@@ -2,11 +2,15 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet],
-  template: `<router-outlet></router-outlet>`
+  template: `
+   <!-- // <h1>{{ title }}</h1> -->
+    <router-outlet></router-outlet>
+  `
 })
-export class App {}
+export class App {
+//  title = 'sistema-pericias-dashboard'; // adiciona a propriedade
+}

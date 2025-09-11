@@ -1,27 +1,27 @@
-import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID,ChangeDetectorRef,NgZone   } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { environment } from '../../../../../environments/environments';
 import { AuthService } from '../../../../../core/interceptors/auth.service';
+import { ThemeService } from '../../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-user-edit-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule],
   template: `
 <div class="dialog-container">
   <div class="dialog-header">
     <img src="assets/images/logos/logo-horizontal.png" alt="Logo" class="logo">
-    <h2>Editar Usuário </h2>
+    <h2>Editar Usuário</h2>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="salvar()" class="dialog-form">
 
-    <div *ngIf="errorMsg" class="error-message">
-      <p>{{ errorMsg }}</p>
-    </div>
+
 
     <div class="form-row">
       <div class="form-item">
@@ -61,8 +61,8 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
         </select>
       </div>
     </div>
-    <label>Não existe rota no back (aqui é só ilustrativo)</label>
 
+    <label>Não existe rota no back (aqui é só ilustrativo)</label>
 
     <div class="dialog-actions">
       <button type="submit">Salvar</button>
@@ -72,28 +72,11 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
 </div>
   `,
   styles: [`
-.dialog-container {
-  padding: 32px;
-  max-width: 450px;
-  width: 100%;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.dialog-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.logo {
-  max-width: 180px;
-  margin-bottom: 12px;
-}
-
+/* Seu CSS existente */
+.dialog-container { padding: 32px; max-width: 450px; width: 100%; background-color: #f8f9fa; border-radius: 8px; }
+.dialog-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+.logo { max-width: 180px; margin-bottom: 12px; }
 h2 { margin: 0; text-align: center; color: #333; font-weight: 600; }
-
 .dialog-form { display: flex; flex-direction: column; gap: 16px; }
 .form-row { display: flex; gap: 4%; flex-wrap: wrap; }
 .form-item { flex: 1 1 48%; display: flex; flex-direction: column; gap: 4px; }
@@ -105,14 +88,12 @@ input:focus, select:focus { border-color: #007bff; box-shadow: 0 0 3px rgba(0,12
 button { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; }
 button[type="submit"] { background-color: #007bff; color: white; }
 button[type="button"] { background-color: #f44336; color: white; }
-.error-message p { color: #f44336; font-weight: 500; margin: 0 0 12px 0; }
-
 @media (max-width: 768px) { .form-item { flex: 1 1 100%; } }
   `]
 })
 export class UserEditDialogComponent {
   form: any;
-  errorMsg: string | null = null;
+  errorMsg: string = '';
   submitted = false;
 
   constructor(
@@ -120,32 +101,63 @@ export class UserEditDialogComponent {
     private http: HttpClient,
     private auth: AuthService,
     private dialogRef: MatDialogRef<UserEditDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    private snackBar: MatSnackBar,
+    public theme: ThemeService,
+    private cd: ChangeDetectorRef,
+    private ngZone: NgZone,   
+
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.form = this.fb.group({
-        username: [data?.username || '', Validators.required],
-        email: [data?.email || '', [Validators.required, Validators.email]],
-        role: [data?.roles?.[0] || '', Validators.required], // pega a primeira role
-        ativo: [data?.active ?? true, Validators.required]   // active vem do backend
-      });
-      
+      username: [data?.username || '', Validators.required],
+      email: [data?.email || '', [Validators.required, Validators.email]],
+      role: [data?.roles?.[0] || '', Validators.required],
+      ativo: [data?.active ?? true, Validators.required]
+    });
   }
 
   salvar() {
     this.submitted = true;
     if (this.form.invalid) return;
-    this.errorMsg = null;
-
+  
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     const payload = { ...this.form.value };
-
+  
     this.http.put(`${environment.apiUrl}/admin/users/${this.data.id}`, payload, { headers })
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.ngZone.run(() => {   // <-- roda dentro do ciclo Angular
+            const msg = 'Usuário atualizado com sucesso';
+            if (isPlatformBrowser(this.platformId)) {
+              this.snackBar.open(msg, 'Fechar', {
+                duration: 4000,
+                horizontalPosition: 'right',
+                verticalPosition: 'top',
+                panelClass: this.theme.isDarkMode() ? 'toast-dark' : 'toast-light'
+              });
+            }
+            this.cd.detectChanges();
+            this.dialogRef.close(true);
+          });
+        },
         error: (err: HttpErrorResponse) => {
-          if (err.status === 401) this.auth.logout();
-          else this.errorMsg = err.error?.error || 'Ocorreu um erro ao atualizar o usuário.';
+          this.ngZone.run(() => {   // <-- força ciclo Angular
+            if (err.status === 401) this.auth.logout();
+            else {
+              this.errorMsg = err.error?.error || 'Ocorreu um erro ao atualizar o usuário.';
+              if (isPlatformBrowser(this.platformId)) {
+                this.snackBar.open(this.errorMsg, 'Fechar', {
+                  duration: 4000,
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top',
+                  panelClass: this.theme.isDarkMode() ? 'toast-dark' : 'toast-light'
+                });
+              }
+              this.cd.detectChanges();  // atualiza view
+            }
+          });
         }
       });
   }
