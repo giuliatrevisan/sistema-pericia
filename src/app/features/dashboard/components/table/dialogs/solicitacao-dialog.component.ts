@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../../environments/environments';
 import { AuthService } from '../../../../../core/interceptors/auth.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 
 @Component({
   selector: 'app-solicitacao-dialog',
@@ -19,10 +21,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 
   <form [formGroup]="form" (ngSubmit)="salvar()" class="dialog-form">
 
-    <div *ngIf="errorMsg" class="error-message">
-      <p>{{ errorMsg }}</p>
-    </div>
-
+ 
     <div class="form-row">
       <div class="form-item">
         <label>Status</label>
@@ -164,15 +163,16 @@ button[type="button"] { background-color: #f44336; color: white; }
   `]
 })
 export class SolicitacaoDialogComponent {
-  form: any;
-  errorMsg: string | null = null;
+  form: FormGroup;
   submitted = false;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private auth: AuthService,
-    private dialogRef: MatDialogRef<SolicitacaoDialogComponent>
+    private dialogRef: MatDialogRef<SolicitacaoDialogComponent>,
+    private snackBar: MatSnackBar,
+    
   ) {
     this.form = this.fb.group({
       status: ['Aberto', Validators.required],
@@ -185,36 +185,55 @@ export class SolicitacaoDialogComponent {
     });
   }
 
-  salvar() {
+  salvar(): void {
     this.submitted = true;
     if (this.form.invalid) return;
 
-    this.errorMsg = null;
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-    const payload = { ...this.form.value, data: this.getCurrentDate(), hora: this.getCurrentTime() };
+
+    const payload = { 
+      ...this.form.value, 
+      data: this.getCurrentDate(), 
+      hora: this.getCurrentTime() 
+    };
 
     this.http.post(`${environment.apiUrl}/solicitacoes`, payload, { headers })
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.snackBar.open('Solicitação criada com sucesso!', 'Fechar', {
+            duration: 4000,
+            panelClass: ['snack-success']
+          });
+          this.dialogRef.close(true);
+        },
         error: (err: HttpErrorResponse) => {
-          if (err.status === 401) this.auth.logout();
-          else this.errorMsg = err.error?.error || 'Ocorreu um erro ao salvar a solicitação.';
+          if (err.status === 401) {
+            this.auth.logout();
+            this.snackBar.open('Sessão expirada. Faça login novamente.', 'Fechar', {
+              duration: 4000,
+              panelClass: ['snack-warning']
+            });
+          } else {
+            const msg = err.error?.error ?? 'Erro ao salvar a solicitação.';
+            this.snackBar.open(msg, 'Fechar', {
+              duration: 4000,
+              panelClass: ['snack-error']
+            });
+          }
         }
       });
   }
 
-  fechar(success: boolean = false) {
-    this.dialogRef.close(success);
+  fechar(): void {
+    this.dialogRef.close(false);
   }
 
   private getCurrentDate(): string {
-    const now = new Date();
-    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+    return new Date().toISOString().slice(0, 10); // yyyy-MM-dd
   }
 
   private getCurrentTime(): string {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    return new Date().toTimeString().slice(0, 8); // HH:mm:ss
   }
 }

@@ -1,9 +1,11 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../../../../environments/environments';
 import { AuthService } from '../../../../../core/interceptors/auth.service';
+
 @Component({
   selector: 'app-solicitacao-delete-dialog',
   standalone: true,
@@ -29,8 +31,6 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
         <button type="button" (click)="deletar()" class="delete-btn">Excluir</button>
         <button type="button" (click)="fechar()">Cancelar</button>
       </div>
-
-      <p *ngIf="errorMsg" class="error-message">{{ errorMsg }}</p>
     </div>
   `,
   styles: [`
@@ -60,12 +60,13 @@ import { AuthService } from '../../../../../core/interceptors/auth.service';
   `]
 })
 export class SolicitacaoDeleteDialogComponent {
-  errorMsg: string | null = null;
+  errorMsg: string = '';
 
   constructor(
     private http: HttpClient,
     private auth: AuthService,
     private dialogRef: MatDialogRef<SolicitacaoDeleteDialogComponent>,
+    private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
 
@@ -75,10 +76,27 @@ export class SolicitacaoDeleteDialogComponent {
 
     this.http.delete(`${environment.apiUrl}/solicitacoes/${this.data.id}`, { headers })
       .subscribe({
-        next: () => this.dialogRef.close(true),
-        error: (err: any) => {
-          if (err.status === 401) this.auth.logout();
-          else this.errorMsg = err.error?.error || 'Erro ao deletar a solicitação.';
+        next: () => {
+          this.snackBar.open('Solicitação excluída com sucesso!', 'Fechar', {
+            duration: 4000,
+            panelClass: ['snack-success']
+          });
+          this.dialogRef.close(true);
+        },
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 401) {
+            this.auth.logout();
+            this.snackBar.open('Sessão expirada. Faça login novamente.', 'Fechar', {
+              duration: 4000,
+              panelClass: ['snack-warning']
+            });
+          } else {
+            this.errorMsg = err.error?.error || 'Erro ao deletar a solicitação.';
+            this.snackBar.open(this.errorMsg, 'Fechar', {
+              duration: 4000,
+              panelClass: ['snack-error']
+            });
+          }
         }
       });
   }

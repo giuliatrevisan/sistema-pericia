@@ -8,6 +8,7 @@ import { ServerErrorComponent } from './features/errors/server-error/server-erro
 import { RegisterComponent } from './features/auth/register/register.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import {  RelatoriosComponent } from './features/charts/chart.component';
+import { FaqsComponent } from './features/faqs/faqs.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -37,6 +38,12 @@ export const routes: Routes = [
     component: UsersComponent,
     canActivate: [PermissionGuard],
     data: { roles: ['admin'] }, // somente admin pode acessar
+  },
+  {
+    path: 'faqs',
+    component: FaqsComponent,
+    canActivate: [PermissionGuard],
+    data: { roles: ['user','admin','perito'], permissions: ['view_dashboard'] },
   },
 
   { path: 'acesso-negado', component: AccessDeniedComponent },

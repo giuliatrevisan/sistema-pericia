@@ -114,11 +114,12 @@ export class SidebarComponent {
 
   menuItems = [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
-    { label: 'Relatórios', route: '/relatorios', icon: 'assignment' },
-    { label: 'Usuários', route: '/user', icon: 'group', adminOnly: true },
+    { label: 'Relatórios', route: '/relatorios', icon: 'assignment', rolesAllowed: ['admin', 'perito'] },
+    { label: 'Usuários', route: '/user', icon: 'group', adminOnly: true,rolesAllowed: ['admin']  },
     { label: 'Perfil', route: '/profile', icon: 'account_circle' },
+    { label: 'Faqs', route: '/faqs', icon: 'question_answer' }
   ];
-
+  
   constructor(
     private auth: AuthService,
     private router: Router,
@@ -126,8 +127,15 @@ export class SidebarComponent {
     private dialog: MatDialog
   ) {
     this.user = this.auth.getUser();
-    this.menuItems = this.menuItems.filter(item => !item.adminOnly || this.isAdmin);
+  
+    // Filtra itens do menu de acordo com roles
+    this.menuItems = this.menuItems.filter(item => {
+      if (!item.rolesAllowed) return true; // item sem restrição aparece para todos
+      const userRoles = this.user?.roles ?? [];
+      return item.rolesAllowed.some(role => userRoles.includes(role));
+    });
   }
+  
 
   getUserRole(): string {
     if (!this.user?.roles) return 'Usuário';

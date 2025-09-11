@@ -5,14 +5,15 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { ThemeService } from '../../../../core/services/theme.service';
+import { AuthService } from '../../../../core/interceptors/auth.service';
 
 @Component({
   selector: 'app-solicitacoes-tabela',
   standalone: true,
   imports: [CommonModule, MatTableModule, MatMenuModule, MatIconModule, MatButtonModule],
-  providers: [DatePipe], // garante injeção do DatePipe
+  providers: [DatePipe],
   template: `
- <div class="table-responsive">
+<div class="table-responsive">
   <table mat-table [dataSource]="data" matSort
          [ngClass]="{'dark-table': theme.isDarkMode()}"
          class="table table-hover align-middle">
@@ -56,10 +57,12 @@ import { ThemeService } from '../../../../core/services/theme.service';
           <button mat-menu-item (click)="visualizar.emit(s)">
             <mat-icon>visibility</mat-icon> Visualizar
           </button>
-          <button mat-menu-item (click)="editar.emit(s)">
+
+          <!-- Somente admin ou perito -->
+          <button *ngIf="canEditDelete" mat-menu-item (click)="editar.emit(s)">
             <mat-icon>edit</mat-icon> Editar
           </button>
-          <button mat-menu-item (click)="deletar.emit(s)">
+          <button *ngIf="canEditDelete" mat-menu-item (click)="deletar.emit(s)">
             <mat-icon>delete</mat-icon> Deletar
           </button>
         </mat-menu>
@@ -72,32 +75,6 @@ import { ThemeService } from '../../../../core/services/theme.service';
   </table>
 </div>
   `,
-  styles: [`
-    .dark-row { background-color: #222324 !important; color: #fff !important; }
-    .dark-sticky { background-color: #222324 !important; color: #fff !important; font-weight: 600; }
-    .dark-table .mat-row:hover { background-color: #2a2b2c !important; }
-
-    /* Badge de status */
-    .status-badge {
-      display: inline-block;
-      width: 100px;        /* largura fixa */
-      height: 30px;        /* altura fixa */
-      line-height: 30px;   /* centraliza verticalmente o texto */
-      border-radius: 15px; /* metade da altura para arredondar completamente */
-      font-weight: 600;
-      font-size:12px;
-      color: #fff;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .status-aberto { background-color: #4caf50; }       /* Verde */
-    .status-fechado { background-color: #f44336; }     /* Vermelho */
-    .status-em-andamento { background-color: #ff9800; }/* Laranja */
-    .status-outro { background-color: #9e9e9e; }       /* Cinza para status desconhecido */
-  `]
 })
 export class SolicitacoesTabelaComponent implements OnChanges {
   @Input() columns: any[] = [];
@@ -108,11 +85,17 @@ export class SolicitacoesTabelaComponent implements OnChanges {
   @Output() editar = new EventEmitter<any>();
   @Output() deletar = new EventEmitter<any>();
 
+  canEditDelete = false; // controle de permissão
+
   constructor(
     public theme: ThemeService,
     private cdr: ChangeDetectorRef,
-    private datePipe: DatePipe
-  ) {}
+    private datePipe: DatePipe,
+    private authService: AuthService // injeta o AuthService
+  ) {
+    this.canEditDelete = this.authService.hasPermission('update_solicitacoes') &&
+                         this.authService.hasPermission('delete_solicitacoes');
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
@@ -131,10 +114,7 @@ export class SolicitacoesTabelaComponent implements OnChanges {
 
   formatValue(key: string, value: any): string {
     if (!value) return 'Sem descrição';
-
-    // lista de colunas que são datas
     const dateColumns = ['dataCriacao', 'dataAtualizacao', 'data'];
-
     if (dateColumns.includes(key)) {
       return this.datePipe.transform(value, 'dd/MM/yyyy') || value;
     }

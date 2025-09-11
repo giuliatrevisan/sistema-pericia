@@ -2,12 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTableDataSource } from '@angular/material/table';
-import { AuthService } from '../../../../core/interceptors/auth.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { environment } from '../../../../environments/environments';
-import { PdfExportService } from '../../../../core/services/pdf-export.service';
-import { ExcelExportService } from '../../../../core/services/excel-export.service';
 
 // Subcomponentes
 import { SolicitacoesHeaderComponent } from './header/solicitacoes-header.component';
@@ -35,9 +31,7 @@ import { SolicitacaoViewDialogComponent } from './dialogs/solicitacao-view-dialo
     <div class="card-body" [ngStyle]="theme.isDarkMode() ? {'background-color': 'transparent'} : {}">
       
       <app-solicitacoes-header
-        (novo)="abrirDialog()"
-        (exportarPDF)="exportarPDF()"
-        (exportarExcel)="exportarExcel()">
+        (novo)="abrirDialog()">
       </app-solicitacoes-header>
 
       <app-solicitacoes-filtros
@@ -53,7 +47,7 @@ import { SolicitacaoViewDialogComponent } from './dialogs/solicitacao-view-dialo
       <app-solicitacoes-tabela
         [columns]="columns"
         [displayedColumns]="displayedColumns"
-        [data]="dataSource.filteredData"
+        [data]="solicitacoes"
         (visualizar)="visualizar($event)"
         (editar)="editar($event)"
         (deletar)="deletar($event)">
@@ -63,7 +57,7 @@ import { SolicitacaoViewDialogComponent } from './dialogs/solicitacao-view-dialo
         [totalItems]="totalItems"
         [pageSize]="pageSize"
         [(currentPage)]="currentPage"
-        (currentPageChange)="onPageChange($event)">
+        (currentPageChange)="carregarSolicitacoes($event)">
       </app-custom-paginator>
 
     </div>
@@ -75,6 +69,7 @@ import { SolicitacaoViewDialogComponent } from './dialogs/solicitacao-view-dialo
   `]
 })
 export class SolicitacoesTableComponent implements OnInit {
+
   columns = [
     { key: 'id', label: 'ID' },
     { key: 'data', label: 'Data' },
@@ -89,7 +84,7 @@ export class SolicitacoesTableComponent implements OnInit {
   ];
   displayedColumns: string[] = [...this.columns.map(c => c.key), 'acoes'];
 
-  dataSource = new MatTableDataSource<any>([]);
+  solicitacoes: any[] = [];
   totalItems = 0;
   currentPage = 1;
   pageSize = 10;
@@ -105,47 +100,13 @@ export class SolicitacoesTableComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private auth: AuthService,
     private dialog: MatDialog,
     public theme: ThemeService,
-    private cdr: ChangeDetectorRef,
-    private pdfService: PdfExportService,
-    private excelService: ExcelExportService
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    this.dataSource.filterPredicate = this.customFilterPredicate.bind(this);
-    this.carregarSolicitacoes();
-  }
-
-  private customFilterPredicate(data: any, filter: string) {
-    let f: any;
-    try { f = JSON.parse(filter); } catch { f = {}; }
-
-    return (
-      (!f.status || data.status === f.status) &&
-      (!f.cidade || f.cidade.length === 0 || f.cidade.map((c:any)=>c.toLowerCase()).includes(data.cidade?.toLowerCase())) &&
-      (!f.tipo || data.tipo_ocorrencia?.toLowerCase().includes(f.tipo.toLowerCase())) &&
-      (!f.delegacia || data.delegacia?.toLowerCase().includes(f.delegacia.toLowerCase())) &&
-      (!f.protocolo || data.numero_protocolo?.toLowerCase().includes(f.protocolo.toLowerCase())) &&
-      (!f.responsavel || data.perito_responsavel?.toLowerCase().includes(f.responsavel.toLowerCase())) &&
-      (!f.observacoes || data.observacoes?.toLowerCase().includes(f.observacoes.toLowerCase()))
-    );
-  }
-
-  updateFilter() {
-    const filterObj = {
-      status: this.statusFilter,
-      cidade: this.cidadeFilter,
-      tipo: this.tipoFilter,
-      delegacia: this.delegaciaFilter,
-      protocolo: this.protocoloFilter,
-      responsavel: this.responsavelFilter,
-      observacoes: this.observacoesFilter
-    };
-    this.dataSource.filter = JSON.stringify(filterObj);
-    this.totalItems = this.dataSource.filteredData.length;
-    this.currentPage = 1;
+    this.carregarSolicitacoes(this.currentPage);
   }
 
   carregarSolicitacoes(page: number = 1) {
@@ -165,47 +126,42 @@ export class SolicitacoesTableComponent implements OnInit {
 
     this.http.get<any>(`${environment.apiUrl}/solicitacoes`, { headers, params }).subscribe(
       res => {
-        setTimeout(() => {
-          this.dataSource.data = res.solicitacoes || [];
-          this.totalItems = res.pagination?.total || 0;
-          this.currentPage = res.pagination?.page || 1;
-          this.updateFilter();
-          this.cdr.detectChanges();
-        });
+        this.solicitacoes = res.solicitacoes || [];
+        this.totalItems = res.pagination?.total || 0;
+        this.currentPage = res.pagination?.page || 1;
+        this.pageSize = res.pagination?.per_page || 10;
+        this.cdr.detectChanges();
       },
       err => console.error('Erro ao carregar solicitações', err)
     );
-    
   }
-
-  onPageChange(page: number) { this.carregarSolicitacoes(page); }
 
   // filtros individuais
-  filterStatus(value: string) { this.statusFilter = value; this.updateFilter(); }
-  filterCidade(value: string) { this.cidadeFilter = value ? [value] : []; this.updateFilter(); }
-  filterTipo(value: string) { this.tipoFilter = value; this.updateFilter(); }
-  filterDelegacia(value: string) { this.delegaciaFilter = value; this.updateFilter(); }
-  filterProtocolo(value: string) { this.protocoloFilter = value; this.updateFilter(); }
-  filterResponsavel(value: string) { this.responsavelFilter = value; this.updateFilter(); }
-  filterObservacoes(value: string) { this.observacoesFilter = value; this.updateFilter(); }
+  filterStatus(value: string) { this.statusFilter = value; this.carregarSolicitacoes(1); }
+  filterCidade(value: string) { this.cidadeFilter = value ? [value] : []; this.carregarSolicitacoes(1); }
+  filterTipo(value: string) { this.tipoFilter = value; this.carregarSolicitacoes(1); }
+  filterDelegacia(value: string) { this.delegaciaFilter = value; this.carregarSolicitacoes(1); }
+  filterProtocolo(value: string) { this.protocoloFilter = value; this.carregarSolicitacoes(1); }
+  filterResponsavel(value: string) { this.responsavelFilter = value; this.carregarSolicitacoes(1); }
+  filterObservacoes(value: string) { this.observacoesFilter = value; this.carregarSolicitacoes(1); }
 
   // ações
-  editar(s: any) { this.dialog.open(SolicitacaoEditDialogComponent, { width: '450px', data: s })
-    .afterClosed().subscribe(result => { if (result) this.carregarSolicitacoes(); });
+  editar(s: any) { 
+    this.dialog.open(SolicitacaoEditDialogComponent, { width: '450px', data: s })
+      .afterClosed().subscribe(result => { if (result) this.carregarSolicitacoes(this.currentPage); });
   }
 
-  deletar(s: any) { this.dialog.open(SolicitacaoDeleteDialogComponent, { width: '450px', data: s })
-    .afterClosed().subscribe(result => { if (result) this.carregarSolicitacoes(this.currentPage); });
+  deletar(s: any) { 
+    this.dialog.open(SolicitacaoDeleteDialogComponent, { width: '450px', data: s })
+      .afterClosed().subscribe(result => { if (result) this.carregarSolicitacoes(this.currentPage); });
   }
 
-  visualizar(s: any) { this.dialog.open(SolicitacaoViewDialogComponent, { width: '550px', data: s }).afterClosed().subscribe(); }
-
-  abrirDialog() { this.dialog.open(SolicitacaoDialogComponent, { width: '450px' })
-    .afterClosed().subscribe(result => { if (result) this.carregarSolicitacoes(); });
+  visualizar(s: any) { 
+    this.dialog.open(SolicitacaoViewDialogComponent, { width: '550px', data: s }).afterClosed().subscribe(); 
   }
 
-  exportarPDF() { this.pdfService.exportTable(this.columns, this.dataSource.filteredData, 'Solicitações'); }
-  exportarExcel() { this.excelService.exportXLSM(this.dataSource.filteredData, 'Solicitacoes'); }
-
-
+  abrirDialog() { 
+    this.dialog.open(SolicitacaoDialogComponent, { width: '450px' })
+      .afterClosed().subscribe(result => { if (result) this.carregarSolicitacoes(1); });
+  }
 }
