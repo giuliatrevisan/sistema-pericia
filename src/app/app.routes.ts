@@ -59,10 +59,11 @@ export const routes: Routes = [
   { path: 'erro-servidor', component: ServerErrorComponent },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 
-  // SPA fallback
+  //fallback
   {
     path: '**',
     canActivate: [PermissionGuard],
-    component: DashboardComponent, // o guard vai redirecionar se não estiver logado
-  },
+    component: DashboardComponent, 
+  }
+  
 ];
