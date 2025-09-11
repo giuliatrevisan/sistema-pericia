@@ -22,68 +22,85 @@ import { ThemeService } from '../../core/services/theme.service';
     MatProgressSpinnerModule
   ],
   template: `
-  <div class="dashboard-layout d-flex min-vh-100"
-       [ngStyle]="{'background-image': theme.isDarkMode() ? 'url(/assets/images/backgrounds/bg-dark.jpg)' : 'url(/assets/images/backgrounds/bg-light.jpg)'}">
-    
-    <app-sidebar></app-sidebar>
+<div class="dashboard-layout d-flex min-vh-100"
+     [ngStyle]="{'background-image': theme.isDarkMode() ? 'url(/assets/images/backgrounds/bg-dark.jpg)' : 'url(/assets/images/backgrounds/bg-light.jpg)'}">
   
-    <div class="main-content flex-grow-1">
-      <app-navbar class="sticky-top bg-light shadow-sm"></app-navbar>
-  
-      <div class="content p-3">
-        <!-- Loading -->
-        <ng-container *ngIf="loading">
-          <div class="d-flex justify-content-center align-items-center" style="height:200px">
-            <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
-          </div>
-        </ng-container>
-  
-        <!-- Error -->
-        <ng-container *ngIf="!loading && hasError">
-          <div class="alert alert-danger text-center" role="alert">
-            Erro ao carregar usuários. Tente novamente mais tarde.
-          </div>
-        </ng-container>
-  
-        <!-- Empty -->
-        <ng-container *ngIf="!loading && !hasError && users.length === 0">
-          <div class="alert alert-info text-center" role="alert">
-            Nenhum usuário encontrado.
-          </div>
-        </ng-container>
-  
-        <!-- Conteúdo -->
-        <ng-container *ngIf="!loading && !hasError && users.length > 0">
-          <div class="row g-3">
-            <div class="col-12 col-md-4">
-              <app-users-charts [users]="users"></app-users-charts>
-            </div>
-            <div class="col-12 col-md-8">
-              <app-users-table [users]="users"></app-users-table>
-            </div>
-          </div>
-        </ng-container>
+  <app-sidebar></app-sidebar>
+
+  <div class="main-content flex-grow-1">
+    <app-navbar class="sticky-top bg-light shadow-sm"></app-navbar>
+
+    <div class="content p-3">
+      <!-- Header padrão -->
+      <div class="header mb-4 text-center" [ngClass]="theme.isDarkMode() ? 'header-dark' : 'header-light'">
+        <h2>Gerenciamento de Usuários</h2>
+        <p class="subtitle">Visualize estatísticas e gerencie todos os usuários do sistema.</p>
       </div>
+
+      <!-- Loading -->
+      <ng-container *ngIf="loading">
+        <div class="d-flex justify-content-center align-items-center" style="height:200px">
+          <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
+        </div>
+      </ng-container>
+
+      <!-- Error -->
+      <ng-container *ngIf="!loading && hasError">
+        <div class="alert alert-danger text-center" role="alert">
+          Erro ao carregar usuários. Tente novamente mais tarde.
+        </div>
+      </ng-container>
+
+      <!-- Empty -->
+      <ng-container *ngIf="!loading && !hasError && users.length === 0">
+        <div class="alert alert-info text-center" role="alert">
+          Nenhum usuário encontrado.
+        </div>
+      </ng-container>
+
+      <!-- Conteúdo -->
+      <ng-container *ngIf="!loading && !hasError && users.length > 0">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <app-users-charts [users]="users"></app-users-charts>
+          </div>
+          <div class="col-12 col-md-8">
+            <app-users-table [users]="users"></app-users-table>
+          </div>
+        </div>
+      </ng-container>
     </div>
   </div>
+</div>
   `,
   styles: [`
-  .dashboard-layout {
-    width: 100%;
-    min-height: 100vh;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: background 0.3s ease;
-  }
-  
-  /* Conteúdo rolável */
-  .main-content { margin-left: 250px; }
-  @media (max-width:767.98px) { .main-content { margin-left:0; } }
-  .content { margin-top: 60px; overflow-y: auto; min-height: calc(100vh - 60px); }
+.dashboard-layout {
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background 0.3s ease;
+}
+
+/* Conteúdo rolável */
+.main-content { margin-left: 250px; }
+@media (max-width:767.98px) { .main-content { margin-left:0; } }
+.content { margin-top: 60px; overflow-y: auto; min-height: calc(100vh - 60px); }
+
+/* Header padrão */
+.header {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  margin-bottom: 2rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.header-light { background-color: rgba(255, 255, 255, 0.8); color: #333; }
+.header-dark { background-color: #2c2c2c; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.header .subtitle { margin-top: 0.5rem; font-size: 1rem; color: inherit; }
   `]
-  
-  
 })
 export class UsersComponent implements OnInit {
   loading = true;
@@ -93,9 +110,9 @@ export class UsersComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    public theme: ThemeService // << adiciona isso
+    public theme: ThemeService
   ) {}
-  
+
   ngOnInit() {
     this.carregarUsers();
   }

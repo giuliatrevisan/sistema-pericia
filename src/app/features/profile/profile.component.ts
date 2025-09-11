@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserEditDialogComponent } from '../users/table/components/dialogs/user-edit-dialog.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 interface UserProfile {
   user: {
@@ -31,48 +30,53 @@ interface UserProfile {
     MatButtonModule, MatIconModule, MatDialogModule, MatProgressSpinnerModule
   ],
   template: `
-<div class="dashboard-layout">
+<div class="dashboard-layout d-flex min-vh-100">
   <app-sidebar></app-sidebar>
 
-  <div class="main-content">
-    <app-navbar></app-navbar>
+  <div class="main-content flex-grow-1">
+    <app-navbar class="sticky-top bg-light shadow-sm"></app-navbar>
 
-    <div class="content d-flex justify-content-center align-items-center">
+    <div class="content p-3 d-flex justify-content-center">
       <ng-container *ngIf="loading; else profileTemplate">
         <mat-spinner></mat-spinner>
       </ng-container>
 
       <ng-template #profileTemplate>
-        <div class="profile-card p-4 shadow rounded" [ngClass]="theme.isDarkMode() ? 'dark' : 'light'" *ngIf="user">
-          
-          <h2 class="profile-title mb-3">Seu Perfil</h2>
-
-          <!-- AVATAR -->
-          <div class="avatar-wrapper mx-auto mb-3 position-relative">
-            <img [src]="user.avatarUrl || 'assets/illustrations/perfil.jpg'" alt="Perfil" class="profile-avatar rounded-circle">
-            <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden #fileInput>
-            <button mat-icon-button class="change-avatar-btn position-absolute bottom-0 end-0" (click)="fileInput.click()">
-              <mat-icon>camera_alt</mat-icon>
-            </button>
+        <div class="profile-wrapper w-100 d-flex flex-column align-items-center">
+          <!-- Header -->
+          <div class="header mb-4 text-center" [ngClass]="theme.isDarkMode() ? 'header-dark' : 'header-light'">
+            <h2>Seu Perfil</h2>
+            <p class="subtitle">Visualize e edite suas informações pessoais e avatar.</p>
           </div>
 
-          <!-- INFORMAÇÕES -->
-          <div class="profile-details">
-            <div class="detail-item mb-2"><span class="label fw-bold">ID:</span> {{ user.id }}</div>
-            <div class="detail-item mb-2"><span class="label fw-bold">Email:</span> {{ user.email }}</div>
-            <div class="detail-item mb-2"><span class="label fw-bold">Roles:</span> {{ user.roles.join(', ') }}</div>
-            <div class="detail-item mb-3">
-              <span class="label fw-bold">Status:</span> 
-              <span [ngClass]="{'active': user.active, 'inactive': !user.active}">
-                {{ user.active ? 'Ativo' : 'Inativo' }}
-              </span>
+          <div class="profile-card p-4 shadow rounded" [ngClass]="theme.isDarkMode() ? 'dark' : 'light'" *ngIf="user">
+            
+            <!-- AVATAR -->
+            <div class="avatar-wrapper mx-auto mb-3 position-relative">
+              <img [src]="user.avatarUrl || 'assets/illustrations/perfil.jpg'" alt="Perfil" class="profile-avatar rounded-circle">
+              <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden #fileInput>
+              <button mat-icon-button class="change-avatar-btn position-absolute bottom-0 end-0" (click)="fileInput.click()">
+                <mat-icon>camera_alt</mat-icon>
+              </button>
             </div>
 
-            <!-- BOTÃO EDITAR -->
-            <button class="btn btn-success mt-2 w-100" (click)="abrirEditarModal()">
-              Editar
-            </button>
+            <!-- INFORMAÇÕES -->
+            <div class="profile-details text-center">
+              <div class="detail-item mb-2"><span class="label fw-bold">ID:</span> {{ user.id }}</div>
+              <div class="detail-item mb-2"><span class="label fw-bold">Email:</span> {{ user.email }}</div>
+              <div class="detail-item mb-2"><span class="label fw-bold">Roles:</span> {{ user.roles.join(', ') }}</div>
+              <div class="detail-item mb-3">
+                <span class="label fw-bold">Status:</span> 
+                <span [ngClass]="{'active': user.active, 'inactive': !user.active}">
+                  {{ user.active ? 'Ativo' : 'Inativo' }}
+                </span>
+              </div>
 
+              <!-- BOTÃO EDITAR -->
+              <button class="btn btn-success mt-2 w-100" (click)="abrirEditarModal()">
+                Editar
+              </button>
+            </div>
           </div>
         </div>
       </ng-template>
@@ -104,61 +108,49 @@ interface UserProfile {
   overflow-y: auto;
 }
 
+/* Header padrão como UrgenciaComponent */
+.header {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  margin-bottom: 2rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.header-light { background-color: rgba(255, 255, 255, 0.8); color: #333; }
+.header-dark { background-color: #2c2c2c; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+
+.header .subtitle {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: inherit;
+}
+
+/* Profile Card */
+.profile-wrapper { width: 100%; max-width: 450px; }
 .profile-card {
   width: 100%;
-  max-width: 400px;
-  height: 430px;
   border-radius: 12px;
   padding: 1.5rem;
-  text-align: center;
   transition: background-color 0.3s, color 0.3s;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.profile-card.light {
-  background-color: #fff;
-  color: #000;
-}
+.profile-card.light { background-color: #fff; color: #000; }
+.profile-card.dark { background-color: #2c2f48; color: #fff; }
 
-.profile-card.dark {
-  background-color: #2c2f48;
-  color: #fff;
-}
+.avatar-wrapper { width: 100px; height: 100px; position: relative; }
+.profile-avatar { width: 100%; height: 100%; object-fit: cover; }
+.change-avatar-btn { background-color: white; border-radius: 50%; border: 1px solid #ccc; }
 
-.profile-title {
-  margin-bottom: 1rem;
-  font-size: 1.8rem;
-  font-weight: 600;
-}
-
-.avatar-wrapper {
-  width: 100px;
-  height: 100px;
-}
-
-.profile-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.change-avatar-btn {
-  background-color: white;
-  border-radius: 50%;
-  border: 1px solid #ccc;
-}
-
-.profile-details .active {
-  color: green;
-}
-
-.profile-details .inactive {
-  color: red;
-}
+.profile-details .active { color: green; }
+.profile-details .inactive { color: red; }
 
 @media (max-width: 767.98px) {
   .main-content { margin-left: 0; width: 100%; }
-  .profile-card { padding: 1rem; max-width: 300px; }
+  .profile-wrapper { max-width: 350px; }
+  .profile-card { padding: 1rem; }
 }
   `]
 })
@@ -198,13 +190,7 @@ export class ProfileComponent implements OnInit {
     if (!this.user) return;
     const dialogRef = this.dialog.open(UserEditDialogComponent, {
       width: '450px',
-      data: {
-        id: this.user.id,
-        username: this.user.username,
-        email: this.user.email,
-        roles: this.user.roles,
-        active: this.user.active
-      }
+      data: { ...this.user }
     });
 
     dialogRef.afterClosed().subscribe((atualizado: boolean) => {

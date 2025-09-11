@@ -2,16 +2,13 @@ import { Component, signal, OnInit, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../core/interceptors/auth.service';
-import { finalize } from 'rxjs';
-
-// Angular Material
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-recover-password',
   standalone: true,
   imports: [
     CommonModule,
@@ -19,45 +16,37 @@ import { MatButtonModule } from '@angular/material/button';
     RouterModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
-  ],  
+    MatButtonModule,
+    MatSnackBarModule
+  ],
   template: `
-<div class="login-wrapper d-flex justify-content-center align-items-center">
-  <form [formGroup]="form" (ngSubmit)="submit($event)" class="login-form text-center p-4">
+<div class="recover-wrapper d-flex justify-content-center align-items-center">
+  <form [formGroup]="form" (ngSubmit)="submit($event)" class="recover-form text-center p-4">
     
     <div class="form-logo mb-4 d-flex justify-content-center">
       <img src="assets/images/logos/logo-horizontal.png" alt="Logo Perícia Forense" class="img-fluid" />
     </div>
 
-    <h2 class="mb-4">Login</h2>
+    <h2 class="mb-4">Recuperar Senha</h2>
 
     <mat-form-field appearance="outline" class="w-100 mb-3">
-      <mat-label>Usuário</mat-label>
-      <input matInput formControlName="username" placeholder="Digite seu usuário" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="w-100 mb-3">
-      <mat-label>Senha</mat-label>
-      <input matInput type="password" formControlName="password" placeholder="Digite sua senha" />
+      <mat-label>E-mail</mat-label>
+      <input matInput type="email" formControlName="email" placeholder="Digite seu e-mail" />
     </mat-form-field>
 
     <button mat-raised-button class="w-100 mb-3 btn-green" [disabled]="loading()">
-  {{ loading() ? 'Entrando...' : 'Entrar' }}
-</button>
-
-
-    <div *ngIf="error()" class="text-danger mb-3">{{ error() }}</div>
+      {{ loading() ? 'Enviando...' : 'Enviar' }}
+    </button>
 
     <div class="links d-flex justify-content-center gap-3">
-      <a [routerLink]="'/recover'">Esqueci minha senha</a>
-      <a [routerLink]="'/register'">Cadastre-se</a>
+      <a [routerLink]="'/login'">Voltar ao Login</a>
     </div>
-    
+
   </form>
 </div>
   `,
   styles: [`
-.login-wrapper {
+.recover-wrapper {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
@@ -91,7 +80,7 @@ import { MatButtonModule } from '@angular/material/button';
     100% { transform: translateX(0) translateY(0); }
   }
 
-  .login-form {
+  .recover-form {
     position: relative;
     z-index: 2;
     background: rgba(255, 255, 255, 0.95);
@@ -105,6 +94,7 @@ import { MatButtonModule } from '@angular/material/button';
     max-width: 180px;
   }
 }
+
 .btn-green {
   background: linear-gradient(135deg, #00c37a, #009e57);
   color: #fff;
@@ -119,14 +109,11 @@ import { MatButtonModule } from '@angular/material/button';
   box-shadow: 0 8px 20px rgba(0, 156, 87, 0.4);
   background: linear-gradient(135deg, #00d38f, #00a75f);
 }
-
   `]
 })
-export class LoginComponent implements OnInit {
+export class RecoverPasswordComponent implements OnInit {
   form: FormGroup;
   loading = signal(false);
-  error = signal('');
-
   images = [
     'assets/images/carousel/img1.png',
     'assets/images/carousel/img2.png',
@@ -136,13 +123,11 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private auth: AuthService,
-    private router: Router,
+    private snackBar: MatSnackBar,
     private el: ElementRef
   ) {
     this.form = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required]
+      email: ['', [Validators.required, Validators.email]]
     });
   }
 
@@ -155,7 +140,7 @@ export class LoginComponent implements OnInit {
   }
 
   updateBackground() {
-    const wrapper = this.el.nativeElement.querySelector('.login-wrapper');
+    const wrapper = this.el.nativeElement.querySelector('.recover-wrapper');
     if (wrapper) {
       const url = `url('${this.images[this.currentImage()]}')`;
       wrapper.style.setProperty('--carousel-image', url);
@@ -167,15 +152,18 @@ export class LoginComponent implements OnInit {
     if (this.form.invalid) return;
 
     this.loading.set(true);
-    this.error.set('');
 
-    const { username, password } = this.form.value;
-
-    this.auth.login(username, password)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: () => this.router.navigate(['/dashboard']),
-        error: (err: Error) => this.error.set(err.message)
-      });
+    // Simula envio de e-mail
+    setTimeout(() => {
+        console.log('Enviando snackbar'); // teste
+        this.loading.set(false);
+        this.snackBar.open('E-mail enviado! Verifique sua caixa de entrada com os próximos passos.', 'Fechar', {
+          duration: 5000,
+          verticalPosition: 'top',
+          horizontalPosition: 'center'
+        });
+        this.form.reset();
+      }, 1000);
+      
   }
 }
