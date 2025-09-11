@@ -117,7 +117,9 @@ export class SidebarComponent {
     { label: 'Relatórios', route: '/relatorios', icon: 'assignment', rolesAllowed: ['admin', 'perito'] },
     { label: 'Usuários', route: '/user', icon: 'group', adminOnly: true,rolesAllowed: ['admin']  },
     { label: 'Perfil', route: '/profile', icon: 'account_circle' },
-    { label: 'Faqs', route: '/faqs', icon: 'question_answer' }
+    { label: 'Faqs', route: '/faqs', icon: 'question_answer' },
+    { label: 'Urgencia', route: '/urgencia', icon: 'warning', rolesAllowed: ['admin', 'perito'] }
+
   ];
   
   constructor(

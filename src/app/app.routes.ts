@@ -9,10 +9,13 @@ import { RegisterComponent } from './features/auth/register/register.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import {  RelatoriosComponent } from './features/charts/chart.component';
 import { FaqsComponent } from './features/faqs/faqs.component';
+import { UrgenciaComponent } from './features/urgencia/urgencia.component';
+import { RecoverPasswordComponent } from './features/auth/recuperaçãoSenha/recover-password.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'recover', component: RecoverPasswordComponent },
 
   {
     path: 'dashboard',
@@ -44,6 +47,12 @@ export const routes: Routes = [
     component: FaqsComponent,
     canActivate: [PermissionGuard],
     data: { roles: ['user','admin','perito'], permissions: ['view_dashboard'] },
+  },
+  {
+    path: 'urgencia',
+    component: UrgenciaComponent,
+    canActivate: [PermissionGuard],
+    data: { roles: ['admin','perito'], permissions: ['view_dashboard'] },
   },
 
   { path: 'acesso-negado', component: AccessDeniedComponent },

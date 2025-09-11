@@ -5,7 +5,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { HttpClientModule } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { environment } from './environments/environments';
-import { provideAnimations } from '@angular/platform-browser/animations'; // ✅ animações
+import { provideAnimations } from '@angular/platform-browser/animations'; 
 
 export const appConfig: ApplicationConfig = {
   providers: [

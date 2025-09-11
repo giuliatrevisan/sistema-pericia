@@ -22,44 +22,140 @@ interface Solicitacao {
 }
 
 @Component({
-  selector: 'app-relatorios-charts',
+  selector: 'app-relatorios',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective, DragDropModule],
+  imports: [
+    CommonModule,
+    SidebarComponent,
+    NavbarComponent,
+    HttpClientModule,
+    MatProgressSpinnerModule,
+    BaseChartDirective,
+    DragDropModule
+  ],
   template: `
-  <div class="charts-container" cdkDropList (cdkDropListDropped)="drop($event)">
-    <div class="chart-card"
-         *ngFor="let chart of charts; let i = index"
-         cdkDrag
-         [ngClass]="theme.isDarkMode() ? 'bg-dark text-light' : 'bg-light text-dark'">
-      <h4>{{ chart.title }}</h4>
-      <canvas baseChart
-              [data]="chart.data"
-              [type]="chart.type"
-              [options]="chart.options">
-      </canvas>
+<div class="dashboard-layout d-flex min-vh-100"
+     [ngStyle]="{'background-image': theme.isDarkMode() ? 'url(/assets/images/backgrounds/bg-dark.jpg)' : 'url(/assets/images/backgrounds/bg-light.jpg)'}">
+  
+  <app-sidebar></app-sidebar>
+
+  <div class="main-content flex-grow-1">
+    <app-navbar class="sticky-top bg-light shadow-sm"></app-navbar>
+
+    <div class="content p-3">
+      <!-- Header -->
+      <div class="header mb-4 text-center" [ngClass]="theme.isDarkMode() ? 'header-dark' : 'header-light'">
+        <h2>Relatórios de Solicitações</h2>
+        <p class="subtitle">
+          Visualize a distribuição das solicitações registradas por status, tipo de ocorrência e cidade.
+          Utilize os gráficos interativos para análises rápidas.
+        </p>
+      </div>
+
+      <!-- Loading -->
+      <ng-container *ngIf="loading">
+        <div class="d-flex justify-content-center align-items-center" style="height:200px">
+          <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
+        </div>
+      </ng-container>
+
+      <!-- Empty -->
+      <ng-container *ngIf="!loading && solicitacoes.length === 0">
+        <div class="alert alert-info text-center" role="alert">
+          Nenhuma solicitação encontrada.
+        </div>
+      </ng-container>
+
+      <!-- Gráficos -->
+      <ng-container *ngIf="!loading && solicitacoes.length > 0">
+        <div class="charts-container" cdkDropList (cdkDropListDropped)="drop($event)">
+          <div class="chart-card"
+               *ngFor="let chart of charts; let i = index"
+               cdkDrag
+               [ngClass]="theme.isDarkMode() ? 'bg-dark text-light' : 'bg-light text-dark'">
+            <h4>{{ chart.title }}</h4>
+            <canvas baseChart
+                    [data]="chart.data"
+                    [type]="chart.type"
+                    [options]="chart.options">
+            </canvas>
+          </div>
+        </div>
+      </ng-container>
     </div>
   </div>
+</div>
   `,
   styles: [`
-    .charts-container { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; }
-    .chart-card { flex: 1 1 300px; max-width: 400px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 1rem; cursor: grab; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .chart-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-    .chart-card.cdk-drag-dragging { cursor: grabbing; }
-    h4 { text-align: center; margin-bottom: 0.5rem; }
-    canvas { max-height: 250px; width: 100% !important; }
-    @media (max-width: 768px) {
-      .charts-container { flex-direction: column; gap: 1rem; }
-      .chart-card { max-width: 95%; margin: 0 auto; }
-    }
+.dashboard-layout {
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background 0.3s ease;
+}
+.main-content { margin-left: 250px; }
+@media (max-width:767.98px) { .main-content { margin-left:0; } }
+.content { margin-top: 60px; overflow-y:auto; min-height:calc(100vh - 60px); }
+
+/* Header */
+.header {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  margin-bottom: 2rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.header-light { background-color: rgba(255, 255, 255, 0.8); color: #333; }
+.header-dark { background-color: #2c2c2c; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.header .subtitle { margin-top: 0.5rem; font-size: 1rem; color: inherit; }
+
+/* Gráficos */
+.charts-container { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; }
+.chart-card { flex: 1 1 300px; max-width: 400px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 1rem; cursor: grab; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.chart-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.chart-card.cdk-drag-dragging { cursor: grabbing; }
+h4 { text-align: center; margin-bottom: 0.5rem; }
+canvas { max-height: 250px; width: 100% !important; }
+@media (max-width: 768px) {
+  .charts-container { flex-direction: column; gap: 1rem; }
+  .chart-card { max-width: 95%; margin: 0 auto; }
+}
   `]
 })
-export class RelatoriosChartsComponent implements OnChanges {
-  @Input() solicitacoes: Solicitacao[] = [];
+export class RelatoriosComponent implements OnInit {
+  loading = true;
+  solicitacoes: Solicitacao[] = [];
   charts: Array<{ title: string, data: ChartData<any>, options: ChartOptions<any>, type: 'doughnut' | 'bar' }> = [];
 
-  constructor(public theme: ThemeService) { }
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, public theme: ThemeService) {}
 
-  ngOnChanges() {
+  ngOnInit() {
+    this.carregarSolicitacoes();
+  }
+
+  carregarSolicitacoes() {
+    const token = localStorage.getItem('token') || '';
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    this.http.get<any>(`${environment.apiUrl}/solicitacoes`, { headers }).subscribe({
+      next: res => {
+        this.solicitacoes = res.solicitacoes || [];
+        this.generateCharts();
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error('Erro ao carregar solicitações', err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateCharts() {
     if (!this.solicitacoes || this.solicitacoes.length === 0) return;
 
     const statusCount = this.solicitacoes.reduce((acc, s) => {
@@ -102,81 +198,5 @@ export class RelatoriosChartsComponent implements OnChanges {
 
   drop(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.charts, event.previousIndex, event.currentIndex);
-  }
-}
-
-@Component({
-  selector: 'app-relatorios',
-  standalone: true,
-  imports: [CommonModule, SidebarComponent, NavbarComponent, HttpClientModule, MatProgressSpinnerModule, RelatoriosChartsComponent],
-  template: `
-  <div class="dashboard-layout d-flex min-vh-100"
-       [ngStyle]="{'background-image': theme.isDarkMode() ? 'url(/assets/images/backgrounds/bg-dark.jpg)' : 'url(/assets/images/backgrounds/bg-light.jpg)'}">
-    <app-sidebar></app-sidebar>
-
-    <div class="main-content flex-grow-1">
-      <app-navbar class="sticky-top bg-light shadow-sm"></app-navbar>
-
-      <div class="content p-3">
-        <h2>Relatórios de Solicitações</h2>
-        <div [ngClass]="theme.isDarkMode() ? 'p-3 rounded bg-dark text-light' : 'p-3 rounded bg-white text-dark'" style="margin-bottom: 1.5rem;">
-          <p class="mb-0">
-            Visualize a distribuição das solicitações registradas por status, tipo de ocorrência e cidade. 
-            Utilize os gráficos interativos para análises rápidas.
-          </p>
-        </div>
-
-        <ng-container *ngIf="loading; else chartsTemplate">
-          <div class="d-flex justify-content-center align-items-center" style="height:200px">
-            <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
-          </div>
-        </ng-container>
-
-        <ng-template #chartsTemplate>
-          <app-relatorios-charts [solicitacoes]="solicitacoes"></app-relatorios-charts>
-        </ng-template>
-      </div>
-    </div>
-  </div>
-  `,
-  styles: [`
-    .dashboard-layout {
-      width: 100%;
-      min-height: 100vh;
-      height: auto;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      transition: background 0.3s ease;
-    }
-    .main-content { margin-left: 250px; }
-    @media (max-width:767.98px) { .main-content { margin-left:0; } }
-    .content { margin-top: 60px; overflow-y:auto; min-height:calc(100vh - 60px); }
-  `]
-})
-export class RelatoriosComponent implements OnInit {
-  loading = true;
-  solicitacoes: Solicitacao[] = [];
-
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, public theme: ThemeService) {}
-
-  ngOnInit() { this.carregarSolicitacoes(); }
-
-  carregarSolicitacoes() {
-    const token = localStorage.getItem('token') || '';
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-
-    this.http.get<any>(`${environment.apiUrl}/solicitacoes`, { headers }).subscribe({
-      next: res => {
-        this.solicitacoes = res.solicitacoes || [];
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error('Erro ao carregar solicitações', err);
-        this.loading = false;
-        this.cdr.detectChanges();
-      }
-    });
   }
 }

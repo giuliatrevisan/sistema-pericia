@@ -14,20 +14,20 @@ import { AuthService } from '../../../../core/interceptors/auth.service';
   providers: [DatePipe],
   template: `
 <div class="table-responsive">
-  <table mat-table [dataSource]="data" matSort
+  <table mat-table [dataSource]="data"
          [ngClass]="{'dark-table': theme.isDarkMode()}"
-         class="table table-hover align-middle">
+         class="table table-hover align-middle w-100">
 
     <!-- Colunas Dinâmicas -->
     <ng-container *ngFor="let col of columns" [matColumnDef]="col.key">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header
+      <th mat-header-cell *matHeaderCellDef
           [ngClass]="{'dark-row': theme.isDarkMode()}">
         {{ col.label }}
       </th>
       <td mat-cell *matCellDef="let element"
           [ngClass]="{'dark-row': theme.isDarkMode()}">
 
-        <!-- Badge para status -->
+        <!-- Status com div fixa -->
         <ng-container *ngIf="col.key === 'status'; else normalCell">
           <div [ngClass]="getStatusClass(element.status)" class="status-badge">
             {{ element.status }}
@@ -38,18 +38,15 @@ import { AuthService } from '../../../../core/interceptors/auth.service';
         <ng-template #normalCell>
           {{ formatValue(col.key, element[col.key]) }}
         </ng-template>
-
       </td>
     </ng-container>
 
     <!-- Coluna Ações -->
     <ng-container matColumnDef="acoes">
-      <th mat-header-cell *matHeaderCellDef
-          [ngClass]="{'dark-sticky': theme.isDarkMode()}"
-          class="sticky-col bg-light">Ações</th>
-      <td mat-cell *matCellDef="let s"
-          [ngClass]="{'dark-sticky': theme.isDarkMode()}"
-          class="sticky-col bg-light">
+      <th mat-header-cell *matHeaderCellDef [ngClass]="{'dark-sticky': theme.isDarkMode()}">
+        Ações
+      </th>
+      <td mat-cell *matCellDef="let s" [ngClass]="{'dark-sticky': theme.isDarkMode()}">
         <button mat-icon-button [matMenuTriggerFor]="menu">
           <mat-icon>more_vert</mat-icon>
         </button>
@@ -57,8 +54,6 @@ import { AuthService } from '../../../../core/interceptors/auth.service';
           <button mat-menu-item (click)="visualizar.emit(s)">
             <mat-icon>visibility</mat-icon> Visualizar
           </button>
-
-          <!-- Somente admin ou perito -->
           <button *ngIf="canEditDelete" mat-menu-item (click)="editar.emit(s)">
             <mat-icon>edit</mat-icon> Editar
           </button>
@@ -75,6 +70,40 @@ import { AuthService } from '../../../../core/interceptors/auth.service';
   </table>
 </div>
   `,
+  styles: [`
+/* Dark mode geral */
+.dark-table { background-color: #222324; color: #fff; }
+.dark-row { background-color: #222324 !important; color: #fff; }
+.dark-sticky { background-color: #222324 !important; color: #fff; font-weight: 600; }
+.dark-table .mat-row:hover { background-color: #2a2b2c !important; }
+
+/* Status como div fixa */
+.status-badge {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 110px;          /* largura fixa */
+  height: 28px;          /* altura fixa */
+  border-radius: 14px;   /* cantos arredondados */
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover leve para destacar */
+.status-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* cores por status */
+.status-aberto { background-color: #28a745; }       /* verde */
+.status-fechado { background-color: #dc3545; }     /* vermelho */
+.status-em-andamento { background-color: #ffc107; color: #000; } /* amarelo */
+.status-outro { background-color: #6c757d; }       /* cinza */
+  `]
 })
 export class SolicitacoesTabelaComponent implements OnChanges {
   @Input() columns: any[] = [];
@@ -91,7 +120,7 @@ export class SolicitacoesTabelaComponent implements OnChanges {
     public theme: ThemeService,
     private cdr: ChangeDetectorRef,
     private datePipe: DatePipe,
-    private authService: AuthService // injeta o AuthService
+    private authService: AuthService
   ) {
     this.canEditDelete = this.authService.hasPermission('update_solicitacoes') &&
                          this.authService.hasPermission('delete_solicitacoes');
@@ -99,7 +128,7 @@ export class SolicitacoesTabelaComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
-      this.cdr.detectChanges(); // força atualização da tabela
+      this.cdr.detectChanges(); 
     }
   }
 
