@@ -8,56 +8,30 @@ import { MatButtonModule } from '@angular/material/button';
   standalone: true,
   imports: [CommonModule, MatIconModule, MatButtonModule],
   template: `
- <div class="custom-paginator">
+    <div class="custom-paginator">
+      <button mat-icon-button (click)="prevPage()" [disabled]="currentPage === 1">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
 
-<!-- Botão anterior -->
-<button mat-icon-button (click)="prevPage()" [disabled]="currentPage === 1">
-  <mat-icon>chevron_left</mat-icon>
-</button>
+      <ng-container *ngFor="let page of allPages()">
+        <button class="bubble" [class.active]="currentPage === page" (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </ng-container>
 
-<!-- Página 1 -->
-<button class="bubble" 
-        [class.active]="currentPage === 1"
-        (click)="goToPage(1)">1</button>
-
-<!-- Elipse inicial -->
-<span *ngIf="showStartEllipsis()">...</span>
-
-<!-- Páginas do meio -->
-<ng-container *ngFor="let page of middlePages()">
-  <button class="bubble" 
-          [class.active]="currentPage === page"
-          (click)="goToPage(page)">
-    {{ page }}
-  </button>
-</ng-container>
-
-<!-- Elipse final -->
-<span *ngIf="showEndEllipsis()">...</span>
-
-<!-- Última página -->
-<button *ngIf="totalPages > 1"
-        class="bubble"
-        [class.active]="currentPage === totalPages"
-        (click)="goToPage(totalPages)">
-  {{ totalPages }}
-</button>
-
-<!-- Botão próximo -->
-<button mat-icon-button (click)="nextPage()" [disabled]="currentPage === totalPages">
-  <mat-icon>chevron_right</mat-icon>
-</button>
-
-</div>
+      <button mat-icon-button (click)="nextPage()" [disabled]="currentPage === totalPages">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
   `,
   styles: [`
     .custom-paginator {
       display: flex;
-      justify-content: center; /* centraliza horizontalmente */
+      justify-content: center;
       align-items: center;
       gap: 4px;
-      flex-wrap: wrap; /* garante que quebre linha em telas pequenas */
-      padding: 8px 0; /* espaço acima e abaixo */
+      flex-wrap: wrap;
+      padding: 8px 0;
     }
 
     .bubble {
@@ -106,45 +80,25 @@ export class CustomPaginatorComponent implements OnChanges {
 
   ngOnChanges() {
     this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-    if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
+    if (this.currentPage > this.totalPages) this.currentPage = this.totalPages || 1;
+  }
+
+  allPages(): number[] {
+    const pages: number[] = [];
+    for (let i = 1; i <= this.totalPages; i++) pages.push(i);
+    return pages;
   }
 
   goToPage(page: number) {
     this.currentPage = page;
     this.currentPageChange.emit(this.currentPage);
   }
-  
-  
 
-  prevPage() { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
-  nextPage() { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
-
-  // Páginas visíveis no meio
-  middlePages(): number[] {
-    const pages: number[] = [];
-    if (this.totalPages <= 7) {
-      for (let i = 2; i <= this.totalPages - 1; i++) pages.push(i);
-    } else {
-      let start = this.currentPage - 2;
-      let end = this.currentPage + 2;
-  
-      if (start < 2) { start = 2; end = 5; }
-      if (end > this.totalPages - 1) { end = this.totalPages - 1; start = this.totalPages - 4; }
-  
-      // Garante que as páginas estejam dentro do intervalo válido
-      start = Math.max(2, start);
-      end = Math.min(this.totalPages - 1, end);
-  
-      for (let i = start; i <= end; i++) pages.push(i);
-    }
-    return pages;
-  }
-  
-  showStartEllipsis(): boolean {
-    return this.totalPages > 7 && this.currentPage > 4;
+  prevPage() {
+    if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
   }
 
-  showEndEllipsis(): boolean {
-    return this.totalPages > 7 && this.currentPage < this.totalPages - 3;
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1);
   }
 }
