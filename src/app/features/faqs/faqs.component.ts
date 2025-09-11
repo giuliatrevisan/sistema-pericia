@@ -199,7 +199,7 @@ export class FaqsComponent implements OnInit {
   ngOnInit() {
     setTimeout(() => {
       this.faqs = [
-        { pergunta: 'Como criar uma conta?', resposta: 'Você pode criar uma conta clicando no botão de cadastro na página inicial.' },
+        { pergunta: 'Como criar uma conta?', resposta: 'Só quem pode criar é o usuário ADMIN' },
         { pergunta: 'Esqueci minha senha', resposta: 'Clique em "Esqueci minha senha" na tela de login e siga as instruções.' },
         { pergunta: 'Como alterar meu perfil?', resposta: 'Acesse a tela de perfil e clique em "Editar" para alterar suas informações.' },
         { pergunta: 'Como enviar uma solicitação?', resposta: 'Vá até a tela de solicitações e clique em "Nova Solicitação".' }
