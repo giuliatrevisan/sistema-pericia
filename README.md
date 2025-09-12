@@ -48,7 +48,6 @@ A interface é **intuitiva**, com tratamento de estados (*loading, erro e vazio*
 
 No diretório raiz do projeto:
 
-```bash
 # Iniciar aplicação em modo desenvolvimento
 npm start
 
