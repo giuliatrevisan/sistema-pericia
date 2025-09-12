@@ -1,59 +1,83 @@
-# SistemaPericiasDashboard
+# Sistema de Perícias - Dashboard
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.2.
+![Preview do Projeto](preview.gif)
 
-## Development server
+## 📄 Descrição
 
-To start a local development server, run:
+Este projeto é um **Dashboard de Perícias** desenvolvido em **Angular 20+** com foco em **gestão de solicitações, métricas e usuários**. A aplicação é modular, responsiva e segue boas práticas de desenvolvimento, incluindo autenticação, autorização, gráficos e exportação de relatórios em PDF/Excel.  
+
+A interface é **intuitiva**, com tratamento de estados (*loading, erro e vazio*), animações suaves e gráficos dinâmicos para facilitar a análise de dados.
+
+---
+
+## 🚀 Funcionalidades Principais
+
+- **Autenticação e Autorização** com JWT.
+- **Dashboard interativo** com gráficos estatísticos (Chart.js).
+- **Gestão de usuários** e permissões.
+- **Exportação de relatórios** em PDF e Excel.
+- **Filtros dinâmicos** e paginação em tabelas.
+- **Tratamento de erros HTTP** centralizado.
+- **Responsividade** para desktop, tablet e mobile.
+
+---
+
+## 📁 Estrutura do Projeto
+
+- **core/** → Serviços centrais, guards, interceptors, componentes compartilhados (Navbar, Sidebar).
+- **features/** → Funcionalidades específicas como auth, dashboard, users, faqs, urgencia.
+- **assets/** → Imagens, ícones, arquivos estáticos.
+- **environments/** → Configurações de ambientes (`dev` e `prod`).
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
+- Angular 20+  
+- TypeScript  
+- Bootstrap 5  
+- Angular Material  
+- Chart.js  
+- RxJS  
+- jsPDF & jsPDF-AutoTable  
+- XLSX (Excel export)  
+
+---
+
+## ⚡ Scripts Disponíveis
+
+No diretório raiz do projeto:
 
 ```bash
-ng serve
-```
+# Iniciar aplicação em modo desenvolvimento
+npm start
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+# Compilar para produção
+npm run build
 
-## Code scaffolding
+# Compilar e assistir alterações
+npm run watch
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+# Executar testes
+npm test
 
-```bash
-ng generate component component-name
-```
+## 📑 Documentação
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Para mais detalhes sobre a arquitetura, funcionalidades e uso do sistema, consulte a documentação:  
 
-```bash
-ng generate --help
-```
+[📄 Documentação - Giulia.pdf](Documentação%20-%20Giulia.pdf)
 
-## Building
+---
 
-To build the project run:
+## 👩 Autora
 
-```bash
-ng build
-```
+**Giulia Trevisan**  
+Instagram: [@trevisandev](https://www.instagram.com/trevisandev)
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## 🎯 Considerações
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Este projeto é resultado de estudo e desenvolvimento prático em **Angular**, com atenção especial à **UX/UI**, **responsividade** e **boa arquitetura de código**.  
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Espero que esta ferramenta contribua para a **gestão eficiente de perícias**, oferecendo uma experiência **simples, rápida e confiável** para os usuários.
